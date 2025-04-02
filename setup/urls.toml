@@ -1,0 +1,29 @@
+[macos_arm64]
+platforms = [["darwin", "arm64"]]
+micromamba = { url = "https://github.com/mamba-org/micromamba-releases/releases/download/1.5.9-1/micromamba-osx-arm64", version = "1.5.9", md5 = "e00082c1075d7c6910168c54575ce046"}
+lslviewer = { url = "https://beambci.s3.eu-central-1.amazonaws.com/LslViewer0.1.1-macos_arm64", md5 = "2398ec369efdb158637b05803eae3682" }
+labrecorder_cli = { url = "https://beambci.s3.eu-central-1.amazonaws.com/labrecorder_cli/1.16.4/LabRecorderCLI-1.16.4-MacOs_amd64.zip", md5 = "4bb305e1f9805b3b84b709b435cc37a7", executable="LabRecorderCLI.app/Contents/MacOS/LabRecorderCLI" }
+
+[macos_x86_64]
+platforms = [["darwin", "x86_64"]]
+micromamba = { url = "https://github.com/mamba-org/micromamba-releases/releases/download/1.5.9-1/micromamba-osx-64", version = "1.5.9", md5 = "ad82c963aadb5e40f83eabe98c51b566"}
+lslviewer = { url = "https://beambci.s3.eu-central-1.amazonaws.com/LslViewer0.1.1-macos_x86_64", md5 = "646d1bc5b3f0b03f3b393d1a3d9b0e45" }
+labrecorder_cli = { url = "https://beambci.s3.eu-central-1.amazonaws.com/labrecorder_cli/1.16.4/LabRecorderCLI-1.16.4-MacOs_amd64.zip", md5 = "4bb305e1f9805b3b84b709b435cc37a7", executable="LabRecorderCLI.app/Contents/MacOS/LabRecorderCLI" }
+
+[windows_x86_64]
+platforms = [["windows", "x86_64"], ["windows", "amd64"], ["windows", "i686"]]
+micromamba = { url = "https://github.com/mamba-org/micromamba-releases/releases/download/1.5.9-1/micromamba-win-64", version = "1.5.9", md5 = "c62805d76977eca4c65c4e1ceac24ad6"}
+lslviewer = { url = "https://beambci.s3.eu-central-1.amazonaws.com/LslViewer0.1.1-windows_x86_64.exe", md5 = "4ddbc6dda5f0382957292555ca7a8809" }
+labrecorder_cli = { url = "https://beambci.s3.eu-central-1.amazonaws.com/labrecorder_cli/1.16.4/LabRecorderCLI_1.16.4_Windows_amd64.zip", md5 = "f59e9b5b002ee086206bf4c5d8a8e0a3", executable="LabRecorderCLI.exe" }
+
+[linux_x86_64]
+platforms = [["linux", "x86_64"]]
+micromamba = { url = "https://github.com/mamba-org/micromamba-releases/releases/download/1.5.9-1/micromamba-linux-64", version = "1.5.9", md5 = "c2f9074b073b4826fc17f321b0f57f67"}
+labrecorder_cli = { url="https://beambci.s3.eu-central-1.amazonaws.com/labrecorder_cli/1.16.4/LabRecorderCLI_1.16.4_linux_x86_64.zip", md5 = "563de5a8862bf7bea2b9a779a501a5a4", executable="LabRecorderCLI"}
+lslviewer = { url = "https://beambci.s3.eu-central-1.amazonaws.com/LslViewer0.1.1-linux_x86_64", md5 = "55156e116dcd8a5467c2483b4b8e0aad" }
+
+[linux_arm64]
+platforms = [["linux", "aarch64"]]
+micromamba = { url = "https://github.com/mamba-org/micromamba-releases/releases/download/1.5.9-1/micromamba-linux-aarch64", version = "1.5.9", md5 = "c607b84fe3863ab8ff0b5d56de86774b"}
+labrecorder_cli = { url="https://beambci.s3.eu-central-1.amazonaws.com/labrecorder_cli/1.16.4/LabRecorderCLI_1.16.4_linux_arm64.zip", md5 = "0f81efa2adb1842b74bf88f09d12ae10", executable="LabRecorderCLI"}
+lslviewer = { url = "https://beambci.s3.eu-central-1.amazonaws.com/LslViewer0.1.1-linux_arm64", md5 = "3628e5d15a33634d3e844e4106c82e81" }

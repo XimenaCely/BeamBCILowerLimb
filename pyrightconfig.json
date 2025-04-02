@@ -1,0 +1,8 @@
+{
+  "exclude": [
+    "backend",
+    "neuropype_code",
+  ],
+  "venvPath": "micromamba/root/envs",
+  "venv": "beambci"
+}

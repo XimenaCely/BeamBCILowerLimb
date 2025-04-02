@@ -1,0 +1,11 @@
+matplotlib
+numpy
+psutil
+pylsl
+pyxdf
+PyQt5
+pyreadline
+requests
+scipy
+mne
+spectrum

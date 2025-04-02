@@ -1,0 +1,73 @@
+{
+    "source": {
+        "class": "MotorImagerySignalGeneratorModule",
+        "parameters": {
+            "setup": "LowerLimb",
+            "fs": 512,
+            "chunksize": 10,
+            "f_smr": 11.0,
+            "amplitude_smr": 2.0,
+            "amplitude_noise": 1.0,
+            "erd_length": 4.0,
+            "erd_shape": "squared sine halfwave",
+            "hov_amplitude": 750.0,
+            "button_erd_c3": "button_action_erd_c3",
+            "button_erd_cz": "button_action_erd_cz",
+            "button_erd_c4": "button_action_erd_c4",
+            "button_hov_left": "button_action_hov_left",
+            "button_hov_right": "button_action_hov_right"
+        }
+    },
+    "preprocessing": {
+        "class": "PreprocessingLowerLimbModule",
+        "parameters": {
+            "fs_out": 25,
+            "FOI": 11.0,
+            "sliding_window_seconds": 0.4,
+            "spatial_filter_type": "4-Ch Laplacian Lower Limb",
+            "eog_filter": "None",
+            "enable_debugging_streams": false
+        }
+    },
+    "classification": {
+        "class": "LowerLimbClassificationModule",
+        "parameters": {
+            "ReferenceCz": 9.0,
+            "ThresholdCz": 0.2,
+            "ThresholdEOGtrigger": 1000
+        }
+    },
+    "task": {
+        "class": "EEGCalibrationLowerLimbTaskModule",
+        "parameters": {
+            "num_cues": 10,
+            "cue_length": 5.0,
+            "random_order": false,
+            "iti_min": 1.0,
+            "iti_max": 3.0
+        }
+    },
+    "feedback": {
+        "class": "ProgressBarLowerLimbFeedbackModule",
+        "parameters": {
+            "display_bar": true,
+            "display_relax": true,
+            "window_maximized": true,
+            "window_width": 1000,
+            "window_height": 750,
+            "window_left": 0,
+            "window_top": 0
+        }
+    },
+    "recording": {
+        "class": "LabRecorderModule",
+        "parameters": {
+            "Study": "BCISTUDY",
+            "Subject": "P01",
+            "Task": "Task_1",
+            "Run": 1,
+            "require_streams": true,
+            "record_all_streams": false
+        }
+    }
+}
