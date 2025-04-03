@@ -59,6 +59,7 @@ class TCPClient:
             print("Connected to TCP server.")
             threading.Thread(target=self.receive_data, daemon=True).start()
         except Exception as e:
+            self.connected = False
             print(f"TCP Connection failed: {e}")
 
     def send_message(self, command_key):
@@ -68,13 +69,16 @@ class TCPClient:
         print("command: ", command_key)
         message = json.dumps(commands[command_key])  # JSON Convert
         print(f"message: {message}")
-        try:
-            message_bytes = message.encode('utf-8') + b'\0'
-            print(message_bytes)
-            self.client.sendall(message_bytes)
-            # print(f"Sent (TCP): {message}")
-        except Exception as e:
-            print(f"TCP Send error: {e}")
+        if self.connected:
+            try:
+                message_bytes = message.encode('utf-8') + b'\0'
+                print(message_bytes)
+                self.client.sendall(message_bytes)
+                # print(f"Sent (TCP): {message}")
+            except Exception as e:
+                print(f"TCP Send error: {e}")
+        else:
+            print("TCP Client not connected.")
 
     def receive_data(self):
         try:
@@ -234,29 +238,7 @@ class RelaxFeedbackWidget(QWidget):
         qr_size = min(w, h)
         radius = qr_size/2
         qp.fillRect(int(round(w/2-radius)), int(round(h/2-radius)), qr_size, qr_size, br)
-"""
-class MWcontrol(QWidget):
 
-    def __init__(self):
-        super(MWcontrol, self).__init__()
-
-        self.visible: bool = True
-        self.enabled: bool = True
-
-        self.lastUpdate = time.time()
-
-        self.state: str = "CONTINUE"
-
-
-    def updateStates(self):
-
-        t = time.time()
-        dt = t - self.lastUpdate
-
-        self.lastUpdate = t
-        #print("up_down_percent: ",self.UP_DOWN_PERCENT_PER_SEC)
-        print("state MW control: ",self.state)
-"""
 class PacmanWidget(QWidget):
 
     DEFAULT_COLOR = QtGui.QColor(255, 200, 100)
@@ -371,28 +353,28 @@ class VNF_KNF_LowerLimb(QMainWindow):
         #activate communication        
         self.client = None
         self.connected = False
-
+        
         if self.display_activate_robot:
             # connect to exo's electronic box
-            try:                
-                self.tcp_client = TCPClient()
-                self.udp_client = None
-                self.is_connected = False
+            if self.connected:            
+                try:                
+                    self.tcp_client = TCPClient()
+                    self.udp_client = None
+                    self.is_connected = False
 
-                self.tcp_client.connect()
-                self.udp_client = UDPClient()
-                self.is_connected = self.tcp_client.connected
-                # send initial zero
-                self.tcp_client.send_message(self.EXO_COMMAND_NONE)
-                
-            except Exception:                
-                self.tcp_client.disconnect()
-                if self.udp_client:
-                    self.udp_client.disconnect()
-                
-                self.is_connected = False
-                return
-    
+                    self.tcp_client.connect()
+                    self.udp_client = UDPClient()
+                    self.is_connected = self.tcp_client.connected
+                    # send initial zero
+                    self.tcp_client.send_message(self.EXO_COMMAND_NONE)
+                    
+                except Exception:                
+                    self.tcp_client.disconnect()
+                    if self.udp_client:
+                        self.udp_client.disconnect()                
+                    self.is_connected = False
+                    return
+        
 
         # flag to allow external process to close the window
         self.close_sheduled = False
@@ -401,11 +383,14 @@ class VNF_KNF_LowerLimb(QMainWindow):
         streams = resolve_byprop("name", globals.STREAM_NAME_TASK_EVENTS, minimum=1, timeout=3)
         
         if len(streams) < 1:
+            
             if self.display_activate_robot:
-                self.tcp_client.disconnect()
-                if self.udp_client:
-                    self.udp_client.disconnect()
-                self.is_connected = False
+                if self.connected:
+                    self.tcp_client.disconnect()
+                    if self.udp_client:
+                        self.udp_client.disconnect()
+                    self.is_connected = False
+            
             print("Missing LSL stream")
             sys.exit()
         self.lsl_inlet = StreamInlet(streams[0], max_buflen=360, max_chunklen=1, recover=True)
@@ -489,7 +474,7 @@ class VNF_KNF_LowerLimb(QMainWindow):
 
     def sendMessage(self, msg):
         try:
-            self.tcp_client.send_message(msg)
+            # self.tcp_client.send_message(msg)
             print("Sending message to robot: ",msg)
         except Exception:
             return False
@@ -532,7 +517,7 @@ class VNF_KNF_LowerLimb(QMainWindow):
 
                 self.bar.state = int(sample[1])
                 self.bar_relax.state = int(sample[2])
-
+                
                 if self.display_activate_robot:
                     if self.state_exo == "CONTINUE":
                         self.sendMessage(self.EXO_COMMAND_CONTINUE)
@@ -546,7 +531,7 @@ class VNF_KNF_LowerLimb(QMainWindow):
                         self.sendMessage(self.EXO_COMMAND_NONE)
                     else:
                         continue
-
+                
             else:
                 print("No samples recevied within 1s.")
 
