@@ -26,9 +26,9 @@ class SmrErdPipelineModule(Module):
 
     REQUIRED_LSL_STREAMS = [globals.STREAM_NAME_RAW_SIGNAL]
 
-    NUM_OUTPUT_CHANNELS: int = 3
+    NUM_OUTPUT_CHANNELS: int = 4
     OUTPUT_CHANNEL_FORMAT: int = cf_float32
-    OUTPUT_CHANNEL_NAMES: list = ['bipolar EOG', 'µC3', 'µC4']
+    OUTPUT_CHANNEL_NAMES: list = ['bipolar EOG', 'µC3', 'µC4', 'µCz']
 
     # overwrite parameter definition which is empty by superclass
     PARAMETER_DEFINITION = [
@@ -69,7 +69,7 @@ class SmrErdPipelineModule(Module):
             'displayname': 'EOG channels',
             'description': '',
             'type': list,
-            'unit': ['F7-F8', 'Cavallo'],
+            'unit': ['F7-F8', 'Cavallo et al.'],
             'default': 'F7-F8'
         },
         {
@@ -112,15 +112,14 @@ class SmrErdPipelineModule(Module):
         while self.running:
 
             # in_sample, in_timestamp = self.lsl_inlet.pull_sample(timeout=1)
-            samples, timestamps = self.lsl_inlet.pull_chunk(timeout=self.receive_chunk_len_seconds)
-
+            samples, timestamps = self.lsl_inlet.pull_chunk(timeout=self.receive_chunk_len_seconds) #EEG data
             # if in_sample is not None:
             if len(samples) > 0:
 
                 self.samples_received += len(samples)
 
                 out_samples, out_timestamps = self.process_data(samples, timestamps)
-
+                print("out_samples: ", out_samples, "out_timestamps: ", out_timestamps)
                 if len(out_samples) > 0:
 
                     for sample, timestamp in zip(out_samples, out_timestamps):
@@ -154,8 +153,8 @@ class SmrErdPipelineModule(Module):
 
         if eeg_out is not None or eog_out is not None:
             # print(out_samples.shape, len(out_timestamps), round((t2 - t1) * 1000, 1), "ms")
-            # print(eeg_out.shape, eeg_timestamps)
-            # print(eog_out.shape, eog_timestamps)
+            print("eeg: ", eeg_out.shape, eeg_timestamps)
+            print("eog: ", eog_out.shape, eog_timestamps)
 
             # combine into one array
             combined_out = np.concatenate([eog_out, eeg_out], axis=1)
@@ -175,7 +174,7 @@ class SmrErdPipelineModule(Module):
                 combined_out_timestamps = combined_out_timestamps.tolist()
             if np.isscalar(combined_out_timestamps):
                 combined_out_timestamps = [float(combined_out_timestamps)]
-
+            print("combined_out: ", combined_out, "combined_out_timestamps: ", combined_out_timestamps)
             return combined_out, combined_out_timestamps
 
         return [], []
@@ -215,11 +214,11 @@ class SmrErdPipelineModule(Module):
         inlet_channel_labels = LSLStreamInfoInterface.get_channel_labels(self.lsl_inlet.info())
 
         # generate spatial filter maxtrix
-        spatial_filter_out_labels = ['bipolar EOG', 'C3', 'C4']
+        spatial_filter_out_labels = ['bipolar EOG', 'C3', 'C4', 'CZ']
         spatial_filter_weight_matrix = np.zeros([len(spatial_filter_out_labels), len(inlet_channel_labels)])
 
         # EOG component
-        if self.get_parameter_value('eog_filter') == 'Cavallo':
+        if self.get_parameter_value('eog_filter') == 'Cavallo et al.':
             spatial_filter_weight_matrix[spatial_filter_out_labels.index('bipolar EOG'), inlet_channel_labels.index('C3')] = 1
             spatial_filter_weight_matrix[spatial_filter_out_labels.index('bipolar EOG'), inlet_channel_labels.index('C4')] = -1
             spatial_filter_weight_matrix[spatial_filter_out_labels.index('bipolar EOG'), inlet_channel_labels.index('F3')] = 1
@@ -256,20 +255,27 @@ class SmrErdPipelineModule(Module):
             spatial_filter_weight_matrix[spatial_filter_out_labels.index('bipolar EOG'), inlet_channel_labels.index('F8')] = -1
 
             spatial_filter_weight_matrix[spatial_filter_out_labels.index('C3'), inlet_channel_labels.index('C3')] = 1
-            spatial_filter_weight_matrix[spatial_filter_out_labels.index('C3'), inlet_channel_labels.index('Cz')] = -0.25
+            spatial_filter_weight_matrix[spatial_filter_out_labels.index('C3'), inlet_channel_labels.index('CZ')] = -0.25
             spatial_filter_weight_matrix[spatial_filter_out_labels.index('C3'), inlet_channel_labels.index('F3')] = -0.25
             spatial_filter_weight_matrix[spatial_filter_out_labels.index('C3'), inlet_channel_labels.index('P3')] = -0.25
             spatial_filter_weight_matrix[spatial_filter_out_labels.index('C3'), inlet_channel_labels.index('T7')] = -0.25
 
             spatial_filter_weight_matrix[spatial_filter_out_labels.index('C4'), inlet_channel_labels.index('C4')] = 1
-            spatial_filter_weight_matrix[spatial_filter_out_labels.index('C4'), inlet_channel_labels.index('Cz')] = -0.25
+            spatial_filter_weight_matrix[spatial_filter_out_labels.index('C4'), inlet_channel_labels.index('CZ')] = -0.25
             spatial_filter_weight_matrix[spatial_filter_out_labels.index('C4'), inlet_channel_labels.index('P4')] = -0.25
             spatial_filter_weight_matrix[spatial_filter_out_labels.index('C4'), inlet_channel_labels.index('F4')] = -0.25
             spatial_filter_weight_matrix[spatial_filter_out_labels.index('C4'), inlet_channel_labels.index('T8')] = -0.25
 
+            spatial_filter_weight_matrix[spatial_filter_out_labels.index('CZ'), inlet_channel_labels.index('CZ')] = 1
+            spatial_filter_weight_matrix[spatial_filter_out_labels.index('CZ'), inlet_channel_labels.index('C3')] = -0.25
+            spatial_filter_weight_matrix[spatial_filter_out_labels.index('CZ'), inlet_channel_labels.index('C4')] = -0.25
+            spatial_filter_weight_matrix[spatial_filter_out_labels.index('CZ'), inlet_channel_labels.index('FZ')] = -0.25
+            spatial_filter_weight_matrix[spatial_filter_out_labels.index('CZ'), inlet_channel_labels.index('PZ')] = -0.25
+
         else:
             raise(Exception('Unsupported spatial filter type: {}'.format(self.get_parameter_value('spatial_filter_type'))))
-
+        print("spatial_filter_weight_matrix: ", spatial_filter_weight_matrix)
+        print("inlet_channel_labels:", inlet_channel_labels)
         # init preprocessing pipeline
         self.common_pipeline, self.eeg_pipeline, self.eog_pipeline, self.fs_out = create_smr_erd_pipeline(
             inlet_channel_labels,
@@ -344,3 +350,5 @@ class SmrErdPipelineModule(Module):
         self.stop()
         time.sleep(0.2)
         self.start()
+
+

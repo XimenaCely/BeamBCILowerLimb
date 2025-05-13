@@ -146,10 +146,13 @@ class EEGCalibrationTaskModule(TaskModule):
         # copy inputs
         self.norm_out_c3 = sample[0]
         self.norm_out_c4 = sample[1]
-        self.HOV_left = sample[2] > 0.5
-        self.HOV_right = sample[3] > 0.5
-        self.low_mu_c3 = sample[4] > 0.5
-        self.low_mu_c4 = sample[5] > 0.5
+        self.norm_out_cz = sample[2]
+        self.HOV_left = sample[3] > 0.5
+        self.HOV_right = sample[4] > 0.5
+        self.low_mu_c3 = sample[5] > 0.5
+        self.low_mu_c4 = sample[6] > 0.5
+        self.low_mu_cz = sample[7] > 0.5
+
 
         # set some outputs
         if self.control_by_eeg:
@@ -160,6 +163,11 @@ class EEGCalibrationTaskModule(TaskModule):
                 self.state_right_exo = ExoState.STOP
             
             if self.low_mu_c4:
+                self.state_left_exo = ExoState.CLOSE
+            else:
+                self.state_left_exo = ExoState.STOP
+            
+            if self.low_mu_cz:
                 self.state_left_exo = ExoState.CLOSE
             else:
                 self.state_left_exo = ExoState.STOP

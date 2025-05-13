@@ -35,7 +35,7 @@ class EEGCalibrationLowerLimbTaskModule(TaskModule):
             'description': 'How many walk and relax cues (each) will be displayed.',
             'type': int,
             'unit': '',
-            'default': 2
+            'default': 10
         },
         {
             'name': 'cue_length',
@@ -43,7 +43,7 @@ class EEGCalibrationLowerLimbTaskModule(TaskModule):
             'description': 'How long the walk/relax cues will be displayed.',
             'type': float,
             'unit': 's',
-            'default': 5.0
+            'default': 10.0
         },
         {
             'name': 'random_order',
@@ -68,6 +68,14 @@ class EEGCalibrationLowerLimbTaskModule(TaskModule):
             'type': float,
             'unit': 's',
             'default': 3.0
+        },
+        {
+            'name': 'KFB_locked_time',
+            'displayname': 'KFB locked time (s)',
+            'description': 'How long the robot will be paused after obtaining the ERD',
+            'type': float,
+            'unit': 's',
+            'default': 1.0
         }
     ]
 
@@ -91,6 +99,9 @@ class EEGCalibrationLowerLimbTaskModule(TaskModule):
         # fetch parameters for ITI length and calculate the amount of ITI which will be randomly determined
         min_iti_length: float = self.parameters['iti_min'].getValue()
         max_iti_length: float = self.parameters['iti_max'].getValue()
+        feedback_locked_time: float = self.parameters['KFB_locked_time'].getValue()
+        cue_length: float = self.parameters['cue_length'].getValue()
+
         iti_random_amount: float = max(0, max_iti_length-min_iti_length)
         
         self.wait(10)
@@ -117,11 +128,17 @@ class EEGCalibrationLowerLimbTaskModule(TaskModule):
             # display the cue
             self.cue = c
 
-            # if this is a walk cue, enable EEG control
-            # if c == Cue.WALK:
-            self.control_by_eeg = True
-
-            self.wait(self.parameters['cue_length'].getValue())
+            # if this is a close cue, enable EEG control
+            if c == Cue.WALK:
+                self.state_exo = WalkExo.PAUSE
+                self.wait(feedback_locked_time)
+                self.control_by_eeg = True
+                self.wait(cue_length - feedback_locked_time)
+            else:
+                self.wait(cue_length)
+            #################### check if needed
+            # self.control_by_eeg = True
+            # self.wait(self.parameters['cue_length'].getValue())
 
             # disabled EEG control after Cue
             self.control_by_eeg = False
@@ -153,9 +170,18 @@ class EEGCalibrationLowerLimbTaskModule(TaskModule):
     def process_data(self, sample, timestamp):
         
         # copy inputs
-        self.norm_out_cz = sample[0]
-        self.low_mu_cz = sample[1] > 0.5
-
+        # self.norm_out_cz = sample[0]
+        # self.low_mu_cz = sample[1] > 0.5
+        
+        self.norm_out_c3 = sample[0]
+        self.norm_out_c4 = sample[1]
+        self.norm_out_cz = sample[2]
+        self.HOV_left = sample[3] > 0.5
+        self.HOV_right = sample[4] > 0.5
+        self.low_mu_c3 = sample[5] > 0.5
+        self.low_mu_c4 = sample[6] > 0.5
+        self.low_mu_cz = sample[7] > 0.5
+        
         # set some outputs
         if self.control_by_eeg:
             
@@ -192,6 +218,7 @@ class EEGCalibrationLowerLimbTaskModule(TaskModule):
             Cue_ExoMarkers = 'START_EXO'
         elif self.cue == Cue.STARTIN5 and self.cue != self.last_cue:
             Cue_Markers = 'START'
+            Cue_ExoMarkers = 'RELAX'        #This will pause the robot after activating walking, but not inside the cue
         elif self.cue == Cue.END and self.cue != self.last_cue:
             Cue_Markers = 'END'
             Cue_ExoMarkers = 'END'

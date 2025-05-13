@@ -29,10 +29,10 @@ class PreprocessingLowerLimbModule(Module):
 
     REQUIRED_LSL_STREAMS = [globals.STREAM_NAME_RAW_SIGNAL]
 
-    NUM_OUTPUT_CHANNELS: int = 1
+    NUM_OUTPUT_CHANNELS: int = 4
     OUTPUT_CHANNEL_FORMAT: int = cf_float32
-    OUTPUT_CHANNEL_NAMES: list = ['µCz']
-    # OUTPUT_CHANNEL_NAMES: list = ['bipolar EOG', 'µC3', 'µC4']
+    # OUTPUT_CHANNEL_NAMES: list = ['µCz']
+    OUTPUT_CHANNEL_NAMES: list = ['bipolar EOG', 'µC3', 'µC4', 'µCz']
 
     # overwrite parameter definition which is empty by superclass
     PARAMETER_DEFINITION = [
@@ -65,8 +65,8 @@ class PreprocessingLowerLimbModule(Module):
             'displayname': 'Spatial Filter',
             'description': '',
             'type': list,
-            'unit': ['4-Ch Laplacian Lower Limb', '4-Ch Laplacian', '3-Ch Laplacian'],
-            'default': '4-Ch Laplacian Lower Limb'
+            'unit': ['None', 'Laplacian Cz', '4-Ch Laplacian', '3-Ch Laplacian'],
+            'default': 'Laplacian Cz'
         },
         {
             'name': 'eog_filter',
@@ -219,7 +219,7 @@ class PreprocessingLowerLimbModule(Module):
 
         # generate spatial filter maxtrix
         # spatial_filter_out_labels = ['bipolar EOG', 'C3', 'C4']           ##Changes Ximena--check again if there's an error
-        spatial_filter_out_labels = ['Cz']
+        spatial_filter_out_labels =  ['bipolar EOG', 'C3', 'C4', 'Cz']
         spatial_filter_weight_matrix = np.zeros([len(spatial_filter_out_labels), len(inlet_channel_labels)])
 
         # EOG component
@@ -238,45 +238,54 @@ class PreprocessingLowerLimbModule(Module):
             # spatial_filter_weight_matrix[spatial_filter_out_labels.index('bipolar EOG'), inlet_channel_labels.index('FP2')] = -1
 
         # EEG components
-        if self.get_parameter_value('spatial_filter_type') == '4-Ch Laplacian Lower Limb':          #change here depending on the EEG cap --channels
+        if self.get_parameter_value('spatial_filter_type') == 'None':
+            spatial_filter_weight_matrix[spatial_filter_out_labels.index('Cz'), inlet_channel_labels.index('Cz')] = 1
+
+        elif self.get_parameter_value('spatial_filter_type') == 'Laplacian Cz':          #change here depending on the EEG cap --channels
             # spatial_filter_weight_matrix[spatial_filter_out_labels.index('bipolar EOG'), inlet_channel_labels.index('FP1')] = 1
             # spatial_filter_weight_matrix[spatial_filter_out_labels.index('bipolar EOG'), inlet_channel_labels.index('FP2')] = -1
 
-            spatial_filter_weight_matrix[spatial_filter_out_labels.index('Cz'), inlet_channel_labels.index('Cz')] = 1
-            spatial_filter_weight_matrix[spatial_filter_out_labels.index('Cz'), inlet_channel_labels.index('Fz')] = -0.25
-            spatial_filter_weight_matrix[spatial_filter_out_labels.index('Cz'), inlet_channel_labels.index('C3')] = -0.25
-            spatial_filter_weight_matrix[spatial_filter_out_labels.index('Cz'), inlet_channel_labels.index('C4')] = -0.25
-            spatial_filter_weight_matrix[spatial_filter_out_labels.index('Cz'), inlet_channel_labels.index('Pz')] = -0.25
+            spatial_filter_weight_matrix[spatial_filter_out_labels.index('CZ'), inlet_channel_labels.index('CZ')] = 1
+            spatial_filter_weight_matrix[spatial_filter_out_labels.index('CZ'), inlet_channel_labels.index('FZ')] = -0.25
+            spatial_filter_weight_matrix[spatial_filter_out_labels.index('CZ'), inlet_channel_labels.index('C3')] = -0.25
+            spatial_filter_weight_matrix[spatial_filter_out_labels.index('CZ'), inlet_channel_labels.index('C4')] = -0.25
+            spatial_filter_weight_matrix[spatial_filter_out_labels.index('CZ'), inlet_channel_labels.index('PZ')] = -0.25
 
         elif self.get_parameter_value('spatial_filter_type') == '3-Ch Laplacian':
             spatial_filter_weight_matrix[spatial_filter_out_labels.index('bipolar EOG'), inlet_channel_labels.index('F7')] = 1
             spatial_filter_weight_matrix[spatial_filter_out_labels.index('bipolar EOG'), inlet_channel_labels.index('F8')] = -1
 
             spatial_filter_weight_matrix[spatial_filter_out_labels.index('C3'), inlet_channel_labels.index('C3')] = 1
-            spatial_filter_weight_matrix[spatial_filter_out_labels.index('C3'), inlet_channel_labels.index('Cz')] = -0.33
+            spatial_filter_weight_matrix[spatial_filter_out_labels.index('C3'), inlet_channel_labels.index('CZ')] = -0.33
             spatial_filter_weight_matrix[spatial_filter_out_labels.index('C3'), inlet_channel_labels.index('F3')] = -0.33
             spatial_filter_weight_matrix[spatial_filter_out_labels.index('C3'), inlet_channel_labels.index('P3')] = -0.33
 
             spatial_filter_weight_matrix[spatial_filter_out_labels.index('C4'), inlet_channel_labels.index('C4')] = 1
-            spatial_filter_weight_matrix[spatial_filter_out_labels.index('C4'), inlet_channel_labels.index('Cz')] = -0.33
+            spatial_filter_weight_matrix[spatial_filter_out_labels.index('C4'), inlet_channel_labels.index('CZ')] = -0.33
             spatial_filter_weight_matrix[spatial_filter_out_labels.index('C4'), inlet_channel_labels.index('F4')] = -0.33
             spatial_filter_weight_matrix[spatial_filter_out_labels.index('C4'), inlet_channel_labels.index('P4')] = -0.33
 
         elif self.get_parameter_value('spatial_filter_type') == '4-Ch Laplacian':
-            spatial_filter_weight_matrix[spatial_filter_out_labels.index('bipolar EOG'), inlet_channel_labels.index('F7')] = 1
-            spatial_filter_weight_matrix[spatial_filter_out_labels.index('bipolar EOG'), inlet_channel_labels.index('F8')] = -1
+            # spatial_filter_weight_matrix[spatial_filter_out_labels.index('bipolar EOG'), inlet_channel_labels.index('F7')] = 1
+            # spatial_filter_weight_matrix[spatial_filter_out_labels.index('bipolar EOG'), inlet_channel_labels.index('F8')] = -1
 
             spatial_filter_weight_matrix[spatial_filter_out_labels.index('C3'), inlet_channel_labels.index('C3')] = 1
-            spatial_filter_weight_matrix[spatial_filter_out_labels.index('C3'), inlet_channel_labels.index('Cz')] = -0.25
+            spatial_filter_weight_matrix[spatial_filter_out_labels.index('C3'), inlet_channel_labels.index('CZ')] = -0.25
             spatial_filter_weight_matrix[spatial_filter_out_labels.index('C3'), inlet_channel_labels.index('F3')] = -0.25
             spatial_filter_weight_matrix[spatial_filter_out_labels.index('C3'), inlet_channel_labels.index('P3')] = -0.25
             spatial_filter_weight_matrix[spatial_filter_out_labels.index('C3'), inlet_channel_labels.index('T7')] = -0.25
 
             spatial_filter_weight_matrix[spatial_filter_out_labels.index('C4'), inlet_channel_labels.index('C4')] = 1
-            spatial_filter_weight_matrix[spatial_filter_out_labels.index('C4'), inlet_channel_labels.index('Cz')] = -0.25
+            spatial_filter_weight_matrix[spatial_filter_out_labels.index('C4'), inlet_channel_labels.index('CZ')] = -0.25
             spatial_filter_weight_matrix[spatial_filter_out_labels.index('C4'), inlet_channel_labels.index('P4')] = -0.25
             spatial_filter_weight_matrix[spatial_filter_out_labels.index('C4'), inlet_channel_labels.index('F4')] = -0.25
             spatial_filter_weight_matrix[spatial_filter_out_labels.index('C4'), inlet_channel_labels.index('T8')] = -0.25
+
+            spatial_filter_weight_matrix[spatial_filter_out_labels.index('CZ'), inlet_channel_labels.index('CZ')] = 1
+            spatial_filter_weight_matrix[spatial_filter_out_labels.index('CZ'), inlet_channel_labels.index('FZ')] = -0.25
+            spatial_filter_weight_matrix[spatial_filter_out_labels.index('CZ'), inlet_channel_labels.index('C3')] = -0.25
+            spatial_filter_weight_matrix[spatial_filter_out_labels.index('CZ'), inlet_channel_labels.index('C4')] = -0.25
+            spatial_filter_weight_matrix[spatial_filter_out_labels.index('CZ'), inlet_channel_labels.index('PZ')] = -0.25
 
         else:
             raise(Exception('Unsupported spatial filter type: {}'.format(self.get_parameter_value('spatial_filter_type'))))

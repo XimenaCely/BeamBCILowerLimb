@@ -5,7 +5,7 @@ from threading import Thread
 from typing import List, Optional, cast, Callable
 import random
 from functools import reduce
-
+import pyxdf
 import numpy as np
 import pylsl
 import pyxdf
@@ -18,6 +18,7 @@ logger = logging.getLogger("pythonbci.modules.src.XDFPlayerModule")
 # from PyQt5 import QtCore, QtGui, QtWidgets
 
 from misc import LSLStreamInfoInterface
+import os
 
 class XDFPlayerModule(Module):
 
@@ -67,12 +68,15 @@ class XDFPlayerModule(Module):
                 self.stop()
 
     def load_file(self):
+        print(self.get_parameter_value("xdf_file"))
+        streams, header = pyxdf.load_xdf(r"C:\Users\aurax\Downloads\EEG_cal_04.xdf")
+        print(streams,header)
         if self.get_parameter_value("xdf_file") is None or cast(str, self.get_parameter_value("xdf_file")).strip() == "":
             logger.error("Please select a file before loading")
             self.file_loaded = False
             return
 
-        streams = pyxdf.resolve_streams(self.get_parameter_value("xdf_file"))
+        streams = pyxdf.resolve_streams(r"C:\Users\aurax\Downloads\EEG_cal_04.xdf")# self.get_parameter_value("xdf_file"))
         
         logger.info(f"Loaded {os.path.basename(cast(str, self.get_parameter_value('xdf_file')))} containing {len(streams)} streams:")
         logger.info(f"{[s["name"] for s in streams]}")

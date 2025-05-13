@@ -69,14 +69,16 @@ class TCPClient:
         print("command: ", command_key)
         message = json.dumps(commands[command_key])  # JSON Convert
         print(f"message: {message}")
-        if self.connected:
-            try:
-                message_bytes = message.encode('utf-8') + b'\0'
-                print(message_bytes)
-                self.client.sendall(message_bytes)
-                # print(f"Sent (TCP): {message}")
-            except Exception as e:
-                print(f"TCP Send error: {e}")
+        print("self connected status: ",self.connected)
+        # if self.connected:
+            
+        try:
+            message_bytes = message.encode('utf-8') + b'\0'
+            print(message_bytes)
+            self.client.sendall(message_bytes)
+            # print(f"Sent (TCP): {message}")
+        except Exception as e:
+            print(f"TCP Send error: {e}")
         else:
             print("TCP Client not connected.")
 
@@ -356,24 +358,24 @@ class VNF_KNF_LowerLimb(QMainWindow):
         
         if self.display_activate_robot:
             # connect to exo's electronic box
-            if self.connected:            
-                try:                
-                    self.tcp_client = TCPClient()
-                    self.udp_client = None
-                    self.is_connected = False
+            # if self.connected:            
+            try:                
+                self.tcp_client = TCPClient()
+                self.udp_client = None
+                self.is_connected = False
 
-                    self.tcp_client.connect()
-                    self.udp_client = UDPClient()
-                    self.is_connected = self.tcp_client.connected
-                    # send initial zero
-                    self.tcp_client.send_message(self.EXO_COMMAND_NONE)
-                    
-                except Exception:                
-                    self.tcp_client.disconnect()
-                    if self.udp_client:
-                        self.udp_client.disconnect()                
-                    self.is_connected = False
-                    return
+                self.tcp_client.connect()
+                self.udp_client = UDPClient()
+                self.is_connected = self.tcp_client.connected
+                # send initial zero
+                self.tcp_client.send_message(self.EXO_COMMAND_NONE)
+                
+            except Exception:                
+                self.tcp_client.disconnect()
+                if self.udp_client:
+                    self.udp_client.disconnect()                
+                self.is_connected = False
+                return
         
 
         # flag to allow external process to close the window
@@ -385,11 +387,11 @@ class VNF_KNF_LowerLimb(QMainWindow):
         if len(streams) < 1:
             
             if self.display_activate_robot:
-                if self.connected:
-                    self.tcp_client.disconnect()
-                    if self.udp_client:
-                        self.udp_client.disconnect()
-                    self.is_connected = False
+                # if self.connected:
+                self.tcp_client.disconnect()
+                if self.udp_client:
+                    self.udp_client.disconnect()
+                self.is_connected = False
             
             print("Missing LSL stream")
             sys.exit()
@@ -474,7 +476,7 @@ class VNF_KNF_LowerLimb(QMainWindow):
 
     def sendMessage(self, msg):
         try:
-            # self.tcp_client.send_message(msg)
+            self.tcp_client.send_message(msg)
             print("Sending message to robot: ",msg)
         except Exception:
             return False

@@ -22,8 +22,6 @@ class LowerLimbClassificationModule(BasicClassificationModule):
     Input channels:
     Output channels:
         - NormOutCz
-        - HOVleft
-        - HOVright
         - lowMuCz
     """
     MODULE_PATH = pathlib.Path(os.path.split(os.path.abspath(__file__))[0])
@@ -75,8 +73,6 @@ class LowerLimbClassificationModule(BasicClassificationModule):
     # overwrite the process data method to implement the classification
     def process_data(self, sample, timestamp):
 
-        # extract single values
-        # sample_eog = sample[0]
         sample_cz = sample[0]
         # sample_c4 = sample[2]
         

@@ -23,16 +23,18 @@ class ThresholdClassificationModule(BasicClassificationModule):
     Output channels:
         - NormOutC3
         - NormOutC4
+        - NormOutCz
         - HOVleft
         - HOVright
         - lowMuC3
         - lowMuC4
+        - lowMuCz
     """
     MODULE_PATH = pathlib.Path(os.path.split(os.path.abspath(__file__))[0])
 
-    NUM_OUTPUT_CHANNELS: int = 6
+    NUM_OUTPUT_CHANNELS: int = 8
     OUTPUT_CHANNEL_FORMAT = cf_float32
-    OUTPUT_CHANNEL_NAMES: list = ['NormOutC3', 'NormOutC4', 'HOVleft', 'HOVright', 'lowMuC3', 'lowMuC4']
+    OUTPUT_CHANNEL_NAMES: list = ['NormOutC3', 'NormOutC4', 'NormOutCz', 'HOVleft', 'HOVright', 'lowMuC3', 'lowMuC4', 'lowMuCz']
 
     # overwrite parameter definition which is empty by superclass
     PARAMETER_DEFINITION = [
@@ -53,6 +55,14 @@ class ThresholdClassificationModule(BasicClassificationModule):
             'default': 15.0
         },
         {
+            'name': 'ReferenceCz',
+            'displayname': 'Reference value Cz',
+            'description': '',
+            'type': float,
+            'unit': '',
+            'default': 15.0
+        },
+        {
             'name': 'ThresholdC3',
             'displayname': 'Threshold value C3',
             'description': '',
@@ -63,6 +73,14 @@ class ThresholdClassificationModule(BasicClassificationModule):
         {
             'name': 'ThresholdC4',
             'displayname': 'Threshold value C4',
+            'description': '',
+            'type': float,
+            'unit': '',
+            'default': 0.2
+        },
+        {
+            'name': 'ThresholdCz',
+            'displayname': 'Threshold value Cz',
             'description': '',
             'type': float,
             'unit': '',
@@ -102,25 +120,28 @@ class ThresholdClassificationModule(BasicClassificationModule):
     def process_data(self, sample, timestamp):
 
         # extract single values
+        print("sample: ", sample)
         sample_eog = sample[0]
         sample_c3 = sample[1]
         sample_c4 = sample[2]
-        
+        sample_cz = sample[3]
 
         # normalize mu-power signals
         sample_c3_norm = self.normalize_mu_power(sample_c3, self.parameters['ReferenceC3'].getValue()) # self.PARAM_MU_NORM_RV_C3)
         sample_c4_norm = self.normalize_mu_power(sample_c4, self.parameters['ReferenceC4'].getValue()) # self.PARAM_MU_NORM_RV_C4)
+        sample_cz_norm = self.normalize_mu_power(sample_cz, self.parameters['ReferenceCz'].getValue()) # self.PARAM_MU_NORM_RV_Cz)
 
         # classify mu-power signals
         lowMuC3 = 1.0 if sample_c3_norm < -self.parameters['ThresholdC3'].getValue() else 0.0
         lowMuC4 = 1.0 if sample_c4_norm < -self.parameters['ThresholdC4'].getValue() else 0.0
+        lowMuCz = 1.0 if sample_cz_norm < -self.parameters['ThresholdCz'].getValue() else 0.0
 
         # classify EOG signal
         HOVleft = 1.0 if sample_eog > self.parameters['ThresholdEOGleft'].getValue() else 0.0
         HOVright = 1.0 if sample_eog < self.parameters['ThresholdEOGright'].getValue() else 0.0
 
         # build output sample
-        outsample = [sample_c3_norm, sample_c4_norm, HOVleft, HOVright, lowMuC3, lowMuC4]
+        outsample = [sample_c3_norm, sample_c4_norm, sample_cz_norm, HOVleft, HOVright, lowMuC3, lowMuC4, lowMuCz]
 
         # return the output sample with the input timestamp
         return (outsample, timestamp)

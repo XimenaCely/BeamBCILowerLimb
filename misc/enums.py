@@ -57,9 +57,9 @@ DisplayText: dict = {
     Cue.RELAX.value: 'relax',
     Cue.CLOSE_LEFT.value: 'close left',
     Cue.CLOSE_RIGHT.value: 'close right',
-    Cue.CLOSE.value: 'close',
+    Cue.CLOSE.value: 'walk',#should be 'close'
 
-    Cue.STARTEXO.value: 'start exo',
+    Cue.STARTEXO.value: '',
 
     Cue.HOVLEFT.value: '<<<',
     Cue.HOVRIGHT.value: '>>>',

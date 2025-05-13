@@ -13,14 +13,14 @@ def create_smr_erd_pipeline(
         f_highpass: float = 0.1,
         f_lowpass: float = 70.0,
         f_notch: float = 50.0,
-        spatial_filter_output_labels: List[str] = ['bipolar EOG', 'C3', 'C4'],
+        spatial_filter_output_labels: List[str] = ['bipolar EOG', 'C3', 'C4','CZ'],
         spatial_filter_weight_matrix: Optional[np.ndarray] = None,
         f_eeg_bandpass: List[float] = [1, 30],
         f_eog_lowpass: float = 5.0,
         sliding_window_seconds: float = 0.4,
         single_pole_time_const: float = 0.5,
         enable_debugging_streams: bool = False,
-        channels_eeg_processing=['C3', 'C4']
+        channels_eeg_processing=['C3', 'C4', 'CZ']
 ) -> Tuple:
     inlet_channel_labels = input_channel_labels
     channel_count: int = len(input_channel_labels)
